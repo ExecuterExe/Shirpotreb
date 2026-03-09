@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Инновационный Ширпотреб</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Rubik+Mono+One&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- ФОНОВЫЕ ЧАСТИЦЫ -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- ЗВУКОВЫЕ ЭФФЕКТЫ (без файлов — через Web Audio API в JS) -->
+
+    <div id="app">
+
+        <!-- ═══════════════════════ ЭКРАН ВХОДА ═══════════════════════ -->
+        <div id="screen-welcome" class="screen active">
+            <div class="welcome-container">
+                <div class="logo-wrapper">
+                    <div class="logo-glow"></div>
+                    <div class="logo">🚀</div>
+                </div>
+                <h1 class="main-title">ИННОВАЦИОННЫЙ<br>ШИРПОТРЕБ</h1>
+                <p class="subtitle">Мир агрессивного маркетинга абсурдных продуктов</p>
+                <p class="subtitle-small">Презентуй. Инвестируй. Побеждай.</p>
+
+                <div class="glass-card welcome-form">
+                    <div class="input-group">
+                        <label for="nickname">
+                            <span class="label-icon">👤</span> Ваш никнейм
+                        </label>
+                        <input type="text" id="nickname" placeholder="Как вас называть?" maxlength="20"
+                            autocomplete="off">
+                    </div>
+
+                    <button id="btn-create" class="btn btn-primary btn-glow" onclick="createRoom()">
+                        <span class="btn-icon">🏠</span>
+                        <span class="btn-text">Создать комнату</span>
+                    </button>
+
+                    <div class="divider-line">
+                        <span>или присоединиться</span>
+                    </div>
+
+                    <div class="join-group">
+                        <input type="text" id="room-code" placeholder="КОД" maxlength="5"
+                            style="text-transform: uppercase" autocomplete="off">
+                        <button id="btn-join" class="btn btn-secondary" onclick="joinRoom()">
+                            <span class="btn-icon">🚪</span>
+                            <span class="btn-text">Войти</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="connection-status" class="connection-badge connecting">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Подключение...</span>
+                </div>
+
+                <div class="rules-toggle" onclick="toggleRules()">
+                    <span class="rules-icon">📖</span>
+                    <span>Правила игры</span>
+                    <span class="rules-arrow" id="rules-arrow">▼</span>
+                </div>
+
+                <div id="rules-panel" class="glass-card rules-panel hidden">
+                    <div class="rules-content">
+                        <h3>🎯 О чём эта игра?</h3>
+                        <p>Каждый игрок получает 3 случайные карты: <b>Прилагательное</b>, <b>Предмет</b> и
+                            <b>Особенность</b>.
+                            Из них нужно собрать «инновационный продукт» и убедительно его презентовать. Например:
+                            <em>«Жидкий утюг, который следит за вашим здоровьем»</em> — и это звучит как прорыв
+                            тысячелетия!
+                        </p>
+
+                        <h3>🏆 Два пути к победе</h3>
+                        <p>🏅 <b>Лучший инвестор</b> — у кого к концу больше всего личного капитала.<br>
+                            🏅 <b>Лучший предприниматель</b> — кто привлёк больше всего инвестиций за все раунды.</p>
+
+                        <h3>📋 Ход раунда</h3>
+                        <ol>
+                            <li><b>Подготовка</b> — получаете карты, придумываете презентацию</li>
+                            <li><b>Презентации</b> — по очереди выступаете со своим «стартапом»</li>
+                            <li><b>Инвестирование</b> — тайно распределяете жетоны между понравившимися проектами</li>
+                            <li><b>Подсчёт</b> — кто привлёк больше всех — лучший предприниматель раунда. Кто в него
+                                вложился — получает <b>×2</b> от своей ставки!</li>
+                        </ol>
+
+                        <h3>💡 Золотые правила</h3>
+                        <ul>
+                            <li>🔴 Нельзя игнорировать карты — объясните каждую!</li>
+                            <li>🔴 Нельзя инвестировать в себя</li>
+                            <li>🟢 Если потеряли весь капитал — банк даёт 1 жетон</li>
+                            <li>🟢 При ничье — дополнительные выступления и переголосование</li>
+                        </ul>
+
+                        <h3>⚡ Колода событий (опционально)</h3>
+                        <p>Если включена — каждый раунд вытягивается карта события, которая добавляет ограничения для
+                            ВСЕХ игроков. Например: <em>«Ваша аудитория — роботы»</em> или <em>«Продукт запрещён в 20
+                                странах»</em>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════ ЛОББИ ═══════════════════════ -->
+        <div id="screen-lobby" class="screen">
+            <div class="lobby-container">
+                <div class="room-header">
+                    <h2 class="section-title">🏠 Комната ожидания</h2>
+                    <div class="room-code-box glass-card">
+                        <div class="room-code-label">Код комнаты:</div>
+                        <div class="room-code-value" id="lobby-code"></div>
+                        <button class="btn-icon-only" onclick="copyCode()" title="Скопировать код">
+                            <span>📋</span>
+                        </button>
+                    </div>
+                    <p class="share-hint">📤 Отправьте этот код друзьям, чтобы они присоединились!</p>
+                </div>
+
+                <div class="section-title-small">👥 Игроки</div>
+                <div class="players-list" id="lobby-players"></div>
+
+                <div id="host-settings" class="glass-card settings-panel hidden">
+                    <h3 class="settings-title">⚙️ Настройки игры</h3>
+
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <div class="setting-label">🔄 Количество раундов</div>
+                            <div class="setting-control">
+                                <button class="btn-stepper" onclick="stepSetting('set-rounds', -1)">−</button>
+                                <input type="number" id="set-rounds" min="1" max="10" value="3"
+                                    onchange="updateSettings()">
+                                <button class="btn-stepper" onclick="stepSetting('set-rounds', 1)">+</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-label">💰 Стартовый капитал</div>
+                            <div class="setting-control">
+                                <button class="btn-stepper" onclick="stepSetting('set-capital', -1)">−</button>
+                                <input type="number" id="set-capital" min="3" max="30" value="10"
+                                    onchange="updateSettings()">
+                                <button class="btn-stepper" onclick="stepSetting('set-capital', 1)">+</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-label">⏱ Время подготовки (сек)</div>
+                            <div class="setting-control">
+                                <button class="btn-stepper" onclick="stepSetting('set-prep', -10)">−</button>
+                                <input type="number" id="set-prep" min="10" max="600" value="120" step="10"
+                                    onchange="updateSettings()">
+                                <button class="btn-stepper" onclick="stepSetting('set-prep', 10)">+</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-label">🎤 Время презентации (сек)</div>
+                            <div class="setting-control">
+                                <button class="btn-stepper" onclick="stepSetting('set-present', -10)">−</button>
+                                <input type="number" id="set-present" min="10" max="600" value="120" step="10"
+                                    onchange="updateSettings()">
+                                <button class="btn-stepper" onclick="stepSetting('set-present', 10)">+</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-label">💸 Время инвестирования (сек)</div>
+                            <div class="setting-control">
+                                <button class="btn-stepper" onclick="stepSetting('set-invest', -10)">−</button>
+                                <input type="number" id="set-invest" min="10" max="600" value="60" step="10"
+                                    onchange="updateSettings()">
+                                <button class="btn-stepper" onclick="stepSetting('set-invest', 10)">+</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-item setting-toggle">
+                            <div class="setting-label">⚡ Колода событий</div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="set-events" onchange="updateSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="lobby-actions">
+                    <button id="btn-start-game" class="btn btn-primary btn-glow btn-large hidden" onclick="startGame()">
+                        🚀 Начать игру!
+                    </button>
+                    <p id="waiting-msg" class="waiting-message">
+                        <span class="waiting-spinner"></span>
+                        Ожидание игроков... (минимум 3)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════ ПОДГОТОВКА ═══════════════════════ -->
+        <div id="screen-preparation" class="screen">
+            <div class="game-hud">
+                <div class="hud-item hud-round">
+                    <span class="hud-label">Раунд</span>
+                    <span class="hud-value"><span id="prep-round">1</span>/<span id="prep-total">3</span></span>
+                </div>
+                <div class="hud-item hud-timer">
+                    <div class="timer-ring" id="prep-timer-ring">
+                        <svg viewBox="0 0 100 100">
+                            <circle class="timer-bg" cx="50" cy="50" r="45" />
+                            <circle class="timer-progress" cx="50" cy="50" r="45" id="prep-timer-circle" />
+                        </svg>
+                        <div class="timer-text" id="prep-timer">3:00</div>
+                    </div>
+                </div>
+                <div class="hud-item hud-capital">
+                    <span class="hud-label">Капитал</span>
+                    <span class="hud-value capital-value">💰 <span id="prep-capital">10</span></span>
+                </div>
+            </div>
+
+            <div id="prep-event" class="event-banner hidden">
+                <div class="event-icon">⚡</div>
+                <div class="event-text-content">
+                    <div class="event-label">СОБЫТИЕ РАУНДА</div>
+                    <div class="event-description" id="prep-event-text"></div>
+                </div>
+            </div>
+
+            <h2 class="section-title" style="text-align:center; margin-bottom: 5px;">🎴 Ваши карты</h2>
+            <p style="text-align:center; color: var(--text-dim); margin-bottom: 20px;">Придумайте, как эти три понятия
+                объединить в один продукт!</p>
+
+            <div class="cards-hand">
+                <div class="game-card card-adjective" id="prep-card-adj">
+                    <div class="card-badge">Прилагательное</div>
+                    <div class="card-body">
+                        <div class="card-text" id="prep-adj"></div>
+                    </div>
+                    <div class="card-shine"></div>
+                </div>
+                <div class="game-card card-item" id="prep-card-item">
+                    <div class="card-badge">Предмет</div>
+                    <div class="card-body">
+                        <div class="card-text" id="prep-item"></div>
+                    </div>
+                    <div class="card-shine"></div>
+                </div>
+                <div class="game-card card-feature" id="prep-card-feat">
+                    <div class="card-badge">Особенность</div>
+                    <div class="card-body">
+                        <div class="card-text" id="prep-feat"></div>
+                    </div>
+                    <div class="card-shine"></div>
+                </div>
+            </div>
+
+            <div class="glass-card prep-tips">
+                <h4>💡 Подсказки для презентации:</h4>
+                <ul>
+                    <li>Придумайте как карточки продукта могут быть объединены</li>
+                    <li>Чем ваш инновационный продукт будет ценен для других?</li>
+                    <li>Будьте готовы ответить на возможные вопросы (если вы досрочно закончили речь)</li>
+                    <li>Веселитесь!</li>
+                </ul>
+            </div>
+
+            <div class="prep-order-section">
+                <div class="section-title-small">📋 Порядок выступлений</div>
+                <div id="prep-order" class="presentation-order"></div>
+            </div>
+
+            <div id="prep-host-controls" class="host-controls hidden">
+                <button class="btn btn-secondary" onclick="skipTimer()">⏭ Пропустить подготовку</button>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════ ПРЕЗЕНТАЦИЯ ═══════════════════════ -->
+        <div id="screen-presentation" class="screen">
+            <div class="game-hud">
+                <div class="hud-item hud-round">
+                    <span class="hud-label">Раунд</span>
+                    <span class="hud-value"><span id="pres-round">1</span>/<span id="pres-total">3</span></span>
+                </div>
+                <div class="hud-item hud-timer">
+                    <div class="timer-ring" id="pres-timer-ring">
+                        <svg viewBox="0 0 100 100">
+                            <circle class="timer-bg" cx="50" cy="50" r="45" />
+                            <circle class="timer-progress" cx="50" cy="50" r="45" id="pres-timer-circle" />
+                        </svg>
+                        <div class="timer-text" id="pres-timer">2:00</div>
+                    </div>
+                </div>
+                <div class="hud-item hud-capital">
+                    <span class="hud-label">Капитал</span>
+                    <span class="hud-value capital-value">💰 <span id="pres-capital">10</span></span>
+                </div>
+            </div>
+
+            <div id="pres-event" class="event-banner hidden">
+                <div class="event-icon">⚡</div>
+                <div class="event-text-content">
+                    <div class="event-label">СОБЫТИЕ РАУНДА</div>
+                    <div class="event-description" id="pres-event-text"></div>
+                </div>
+            </div>
+
+            <div class="presentation-stage glass-card">
+                <div class="stage-header">
+                    <div class="stage-counter">
+                        Выступление <span id="pres-index">1</span> из <span id="pres-count">4</span>
+                    </div>
+                    <h2 class="presenter-name" id="pres-name">Игрок</h2>
+                    <div id="pres-is-you" class="is-you-badge hidden">
+                        <span class="pulse-dot"></span>
+                        🎤 Это вы! Выступайте!
+                    </div>
+                </div>
+
+                <div class="cards-display">
+                    <div class="game-card card-adjective card-mini">
+                        <div class="card-badge">Прилагательное</div>
+                        <div class="card-body">
+                            <div class="card-text" id="pres-adj"></div>
+                        </div>
+                    </div>
+                    <div class="game-card card-item card-mini">
+                        <div class="card-badge">Предмет</div>
+                        <div class="card-body">
+                            <div class="card-text" id="pres-item"></div>
+                        </div>
+                    </div>
+                    <div class="game-card card-feature card-mini">
+                        <div class="card-badge">Особенность</div>
+                        <div class="card-body">
+                            <div class="card-text" id="pres-feat"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="previous-presentations" class="previous-section hidden">
+                <div class="prev-toggle" onclick="togglePrevious()">
+                    <span>📋 Предыдущие презентации</span>
+                    <span class="prev-arrow" id="prev-arrow">▼</span>
+                </div>
+                <div id="prev-list" class="prev-list hidden"></div>
+            </div>
+
+            <div id="pres-controls" class="controls hidden">
+                <button class="btn btn-primary btn-glow" onclick="nextPresenterAction()">
+                    ⏭ Следующий выступающий
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════ ИНВЕСТИРОВАНИЕ ═══════════════════════ -->
+        <div id="screen-investing" class="screen">
+            <div class="game-hud">
+                <div class="hud-item hud-round">
+                    <span class="hud-label">Раунд</span>
+                    <span class="hud-value"><span id="inv-round">1</span>/<span id="inv-total">3</span></span>
+                </div>
+                <div class="hud-item hud-timer">
+                    <div class="timer-ring" id="inv-timer-ring">
+                        <svg viewBox="0 0 100 100">
+                            <circle class="timer-bg" cx="50" cy="50" r="45" />
+                            <circle class="timer-progress" cx="50" cy="50" r="45" id="inv-timer-circle" />
+                        </svg>
+                        <div class="timer-text" id="inv-timer">1:00</div>
+                    </div>
+                </div>
+                <div class="hud-item hud-capital">
+                    <span class="hud-label">Ваш капитал</span>
+                    <span class="hud-value capital-value">💰 <span id="inv-capital">10</span></span>
+                </div>
+            </div>
+
+            <div class="invest-header">
+                <h2 class="section-title">💰 Фаза инвестирования</h2>
+                <p class="invest-hint">Распределите жетоны между проектами. В себя вкладывать нельзя!<br>
+                    <b>Кто вложится в лучшего предпринимателя — получит ×2!</b>
+                </p>
+            </div>
+
+            <div id="inv-presentations" class="invest-list"></div>
+
+            <div class="invest-footer glass-card">
+                <div class="invest-remaining">
+                    <span class="remaining-label">Осталось жетонов:</span>
+                    <span class="remaining-value" id="inv-remaining">10</span>
+                </div>
+                <div id="inv-progress" class="invest-progress"></div>
+            </div>
+
+            <button id="btn-invest" class="btn btn-primary btn-glow btn-large" onclick="submitInvestment()">
+                ✅ Подтвердить инвестиции
+            </button>
+            <div id="inv-confirmed" class="confirmed-banner hidden">
+                <span class="confirmed-icon">✅</span>
+                <span>Инвестиции приняты! Ожидайте остальных...</span>
+            </div>
+
+            <div id="inv-host-controls" class="host-controls hidden">
+                <button class="btn btn-secondary" onclick="skipTimer()">⏭ Завершить фазу</button>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════ РЕЗУЛЬТАТЫ РАУНДА ═══════════════════════ -->
+        <div id="screen-results" class="screen">
+            <div class="results-container">
+                <h2 class="section-title">📊 Результаты раунда <span id="res-round">1</span></h2>
+
+                <div id="res-winner" class="winner-banner"></div>
+                <div id="res-investments" class="results-section"></div>
+                <div id="res-lucky" class="results-section"></div>
+                <div id="res-scoreboard" class="scoreboard"></div>
+
+                <div id="res-controls" class="controls hidden">
+                    <button class="btn btn-primary btn-glow btn-large" onclick="nextRound()">
+                        ⏭ Следующий раунд
+                    </button>
+                </div>
+                <div id="res-controls-final" class="controls hidden">
+                    <button class="btn btn-accent btn-glow btn-large" onclick="showFinal()">
+                        🏆 Финальные результаты
+                    </button>
+                </div>
+                <p id="res-wait-msg" class="waiting-message hidden">Ожидание хоста...</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════ НИЧЬЯ (АНОНС) ═══════════════════════ -->
+        <div id="screen-tied" class="screen">
+            <div class="results-container">
+                <div class="tied-banner">
+                    <h2>⚔️ НИЧЬЯ!</h2>
+                    <p>Несколько игроков набрали одинаковое количество инвестиций</p>
+                </div>
+                <div id="tied-players-list" class="tied-list"></div>
+                <div class="tied-countdown">
+                    <p>Через несколько секунд — дополнительные выступления...</p>
+                    <div class="timer-text" id="tied-timer">0:12</div>
+                </div>
+                <div id="tied-investments" class="results-section"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════ ТАЙБРЕЙКЕР — ПРЕЗЕНТАЦИЯ ═══════════════════════ -->
+        <div id="screen-tiebreaker" class="screen">
+            <div class="tiebreaker-container">
+                <div class="tb-header">
+                    <h2>⚔️ Дополнительное выступление</h2>
+                    <p>Докажите, что ваш продукт лучше!</p>
+                </div>
+
+                <div class="presentation-stage glass-card">
+                    <h2 class="presenter-name" id="tb-name">Игрок</h2>
+                    <div class="cards-display">
+                        <div class="game-card card-adjective card-mini">
+                            <div class="card-badge">Прилагательное</div>
+                            <div class="card-body">
+                                <div class="card-text" id="tb-adj"></div>
+                            </div>
+                        </div>
+                        <div class="game-card card-item card-mini">
+                            <div class="card-badge">Предмет</div>
+                            <div class="card-body">
+                                <div class="card-text" id="tb-item"></div>
+                            </div>
+                        </div>
+                        <div class="game-card card-feature card-mini">
+                            <div class="card-badge">Особенность</div>
+                            <div class="card-body">
+                                <div class="card-text" id="tb-feat"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timer-ring tb-timer-ring" id="tb-timer-ring">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="timer-bg" cx="50" cy="50" r="45" />
+                        <circle class="timer-progress" cx="50" cy="50" r="45" id="tb-timer-circle" />
+                    </svg>
+                    <div class="timer-text" id="tb-timer">1:00</div>
+                </div>
+
+                <div id="tb-controls" class="controls hidden">
+                    <button class="btn btn-primary" onclick="nextTiebreakerPresenter()">⏭ Следующий</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════ ТАЙБРЕЙКЕР — ГОЛОСОВАНИЕ ═══════════════════════ -->
+        <div id="screen-tiebreaker-voting" class="screen">
+            <div class="tiebreaker-container">
+                <h2 class="section-title">🗳 Переголосование</h2>
+                <p style="color:var(--text-dim); text-align:center; margin-bottom:20px;">
+                    Выберите, чей продукт лучше (поставьте 1 голос)
+                </p>
+
+                <div class="timer-ring tb-timer-ring" id="tbv-timer-ring">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="timer-bg" cx="50" cy="50" r="45" />
+                        <circle class="timer-progress" cx="50" cy="50" r="45" id="tbv-timer-circle" />
+                    </svg>
+                    <div class="timer-text" id="tbv-timer">0:45</div>
+                </div>
+
+                <div id="tbv-players" class="invest-list"></div>
+
+                <button class="btn btn-primary btn-glow btn-large" onclick="submitTieInvestment()">
+                    ✅ Подтвердить голос
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════ ФИНАЛ ═══════════════════════ -->
+        <div id="screen-gameover" class="screen">
+            <div class="gameover-container">
+                <div class="confetti-container" id="confetti"></div>
+
+                <div class="final-logo">🏆</div>
+                <h1 class="final-title">ФИНАЛ</h1>
+                <p class="final-subtitle">Игра завершена! Вот наши победители:</p>
+
+                <div class="final-winners">
+                    <div class="final-winner-card glass-card winner-investor">
+                        <div class="winner-trophy">💼</div>
+                        <h3>Лучший инвестор</h3>
+                        <div class="winner-subtitle">Больше всего личного капитала</div>
+                        <div id="final-investor" class="winner-name-text"></div>
+                    </div>
+                    <div class="final-winner-card glass-card winner-entrepreneur">
+                        <div class="winner-trophy">🎤</div>
+                        <h3>Лучший предприниматель</h3>
+                        <div class="winner-subtitle">Больше всего привлечённых инвестиций</div>
+                        <div id="final-entrepreneur" class="winner-name-text"></div>
+                    </div>
+                </div>
+
+                <div id="final-scoreboard" class="scoreboard"></div>
+
+                <div id="final-controls" class="controls hidden">
+                    <button class="btn btn-primary btn-glow btn-large" onclick="playAgain()">
+                        🔄 Играть ещё раз
+                    </button>
+                </div>
+                <p id="final-wait" class="waiting-message hidden">Ожидание решения хоста...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- УВЕДОМЛЕНИЯ -->
+    <div id="notification" class="notification hidden">
+        <span id="notification-icon" class="notif-icon"></span>
+        <span id="notification-text" class="notif-text"></span>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+
+</html>
