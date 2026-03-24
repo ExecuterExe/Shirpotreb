@@ -3,7 +3,8 @@
 // ═══════════════════════════════════════════════════════════════════
 
 // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
-
+var isStreamerMode = false;
+var pitchSaveInterval = null;
 var ws = null;
 var myPlayerId = null;
 var myRoomCode = null;
@@ -442,6 +443,7 @@ function updateSettings() {
             rounds: parseInt(document.getElementById('set-rounds').value) || 3,
             startCapital: parseInt(document.getElementById('set-capital').value) || 10,
             useEvents: document.getElementById('set-events').checked,
+            streamerMode: document.getElementById('set-streamer').checked,
             prepTime: parseInt(document.getElementById('set-prep').value) || 120,
             presentTime: parseInt(document.getElementById('set-present').value) || 120,
             investTime: parseInt(document.getElementById('set-invest').value) || 60
@@ -773,6 +775,8 @@ function handleLobbyUpdate(msg) {
         document.getElementById('set-rounds').value = msg.settings.rounds;
         document.getElementById('set-capital').value = msg.settings.startCapital;
         document.getElementById('set-events').checked = msg.settings.useEvents;
+        document.getElementById('set-streamer').checked = msg.settings.streamerMode;
+        isStreamerMode = msg.settings.streamerMode;
         document.getElementById('set-prep').value = msg.settings.prepTime;
         document.getElementById('set-present').value = msg.settings.presentTime;
         document.getElementById('set-invest').value = msg.settings.investTime;
@@ -796,7 +800,10 @@ function handleLobbyUpdate(msg) {
         waitingMsg.classList.remove('hidden');
     }
 
-    showScreen('screen-lobby');
+    // Показываем экран лобби только если мы ещё не на нём (чтобы не скроллить вверх при обновлении настроек)
+    if (currentPhase !== 'lobby') {
+        showScreen('screen-lobby');
+    }
     currentPhase = 'lobby';
 }
 
@@ -850,6 +857,21 @@ function handleRoundStart(msg) {
         hostCtrl.classList.remove('hidden');
     } else {
         hostCtrl.classList.add('hidden');
+    }
+
+    // Стримерский режим
+    isStreamerMode = !!msg.streamerMode;
+    var pitchSection = document.getElementById('prep-pitch-section');
+    var pitchTextarea = document.getElementById('prep-pitch-text');
+    if (isStreamerMode) {
+        pitchSection.classList.remove('hidden');
+        pitchTextarea.value = '';
+        var counter = document.getElementById('pitch-char-count');
+        if (counter) counter.textContent = '0';
+        startPitchAutoSave();
+    } else {
+        pitchSection.classList.add('hidden');
+        stopPitchAutoSave();
     }
 
     showScreen('screen-preparation');
@@ -911,17 +933,42 @@ function handlePresentation(msg) {
             var pp = msg.previousPresentations[i];
             var div = document.createElement('div');
             div.className = 'prev-item';
+            var pitchHtml = '';
+            if (streamerMode && pp.pitchText && pp.pitchText.trim()) {
+                pitchHtml = '<div class="prev-pitch">' + escapeHtml(pp.pitchText) + '</div>';
+            }
             div.innerHTML =
                 '<div class="prev-name">' + escapeHtml(pp.nickname) + '</div>' +
                 '<div class="prev-cards">' +
                 '<span class="tag-adj">' + escapeHtml(pp.cards.adjective) + '</span>' +
                 '<span class="tag-item">' + escapeHtml(pp.cards.item) + '</span>' +
                 '<span class="tag-feat">' + escapeHtml(pp.cards.feature) + '</span>' +
-                '</div>';
+                '</div>' +
+                pitchHtml;
             prevList.appendChild(div);
         }
     } else {
         prevSection.classList.add('hidden');
+    }
+
+    // Стримерский режим — текст презентации
+    var streamerMode = !!msg.streamerMode;
+    var pitchDisplay = document.getElementById('pres-pitch-section');
+    var pitchText = document.getElementById('pres-pitch-text');
+    if (streamerMode && pres.pitchText && pres.pitchText.trim()) {
+        pitchDisplay.classList.remove('hidden');
+        pitchText.textContent = pres.pitchText;
+    } else if (streamerMode) {
+        pitchDisplay.classList.remove('hidden');
+        pitchText.textContent = '';
+    } else {
+        pitchDisplay.classList.add('hidden');
+    }
+
+    // Отправляем последнюю версию текста при переходе из подготовки
+    if (isStreamerMode) {
+        sendPitchText();
+        stopPitchAutoSave();
     }
 
     // Контроли
@@ -1149,6 +1196,19 @@ function handleTiebreakerPresentation(msg) {
 
     showScreen('screen-tiebreaker');
     playSound('start');
+
+    // Стримерский режим
+    var tbPitchSection = document.getElementById('tb-pitch-section');
+    var tbPitchText = document.getElementById('tb-pitch-text');
+    if (msg.streamerMode && pres.pitchText && pres.pitchText.trim()) {
+        tbPitchSection.classList.remove('hidden');
+        tbPitchText.textContent = pres.pitchText;
+    } else if (msg.streamerMode) {
+        tbPitchSection.classList.remove('hidden');
+        tbPitchText.textContent = '';
+    } else {
+        tbPitchSection.classList.add('hidden');
+    }
 }
 
 function handleTiebreakerVoting(msg) {
@@ -1325,6 +1385,42 @@ function leaveRoom() {
     setTimeout(function () {
         connectWS();
     }, 500);
+}
+
+// ==================== СТРИМЕРСКИЙ РЕЖИМ ====================
+
+function onPitchTextChange() {
+    var textarea = document.getElementById('prep-pitch-text');
+    if (!textarea) return;
+    var count = textarea.value.length;
+    var counter = document.getElementById('pitch-char-count');
+    if (counter) counter.textContent = count;
+
+    // Автосохранение — отправляем на сервер
+    sendPitchText();
+}
+
+function sendPitchText() {
+    var textarea = document.getElementById('prep-pitch-text');
+    if (!textarea) return;
+    sendMsg({ type: 'updatePitchText', text: textarea.value });
+}
+
+function startPitchAutoSave() {
+    stopPitchAutoSave();
+    // Каждые 3 секунды автосохраняем текст на сервер
+    pitchSaveInterval = setInterval(function () {
+        if (currentPhase === 'preparation' && isStreamerMode) {
+            sendPitchText();
+        }
+    }, 3000);
+}
+
+function stopPitchAutoSave() {
+    if (pitchSaveInterval) {
+        clearInterval(pitchSaveInterval);
+        pitchSaveInterval = null;
+    }
 }
 
 // Запуск

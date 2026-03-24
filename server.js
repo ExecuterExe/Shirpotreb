@@ -705,6 +705,7 @@ function createRoom(hostId, settings) {
             rounds: Math.min(10, Math.max(1, parseInt(settings.rounds) || 3)),
             startCapital: Math.min(30, Math.max(3, parseInt(settings.startCapital) || 10)),
             useEvents: !!settings.useEvents,
+            streamerMode: !!settings.streamerMode,
             prepTime: Math.min(600, Math.max(10, parseInt(settings.prepTime) || 120)),
             presentTime: Math.min(600, Math.max(10, parseInt(settings.presentTime) || 120)),
             investTime: Math.min(600, Math.max(10, parseInt(settings.investTime) || 60)),
@@ -747,6 +748,7 @@ function addPlayer(room, playerId, nickname, ws) {
         cards: null,
         connected: true,
         isHost: room.hostId === playerId,
+        pitchText: '',
     });
 }
 
@@ -880,6 +882,7 @@ function startNewRound(room) {
             item: itemWord,
             feature: featWord,
         };
+        p.pitchText = '';
     });
 
     // Рандомный порядок презентаций
@@ -903,6 +906,7 @@ function startNewRound(room) {
                 return { id, nickname: pl ? pl.nickname : '???' };
             }),
             prepTime: room.settings.prepTime,
+            streamerMode: room.settings.streamerMode,
         });
     });
 
@@ -952,14 +956,21 @@ function showCurrentPresenter(room) {
             id: presenterId,
             nickname: presenter.nickname,
             cards: presenter.cards,
+            pitchText: presenter.pitchText || '',
         },
         presenterIndex: room.currentPresenterIndex,
         totalPresenters: room.presentationOrder.length,
-        previousPresentations,
+        previousPresentations: previousPresentations.map(pp => ({
+            id: pp.id,
+            nickname: pp.nickname,
+            cards: pp.cards,
+            pitchText: room.players.get(pp.id) ? room.players.get(pp.id).pitchText || '' : '',
+        })),
         event: room.currentEvent,
         presentTime: room.settings.presentTime,
         round: room.currentRound,
         totalRounds: room.totalRounds,
+        streamerMode: room.settings.streamerMode,
     });
 
     startTimer(room, room.settings.presentTime, () => {
@@ -1127,6 +1138,7 @@ function showTiebreakerPresenter(room) {
         presenterIndex: room.currentPresenterIndex,
         totalPresenters: room.tiedPlayers.length,
         presentTime: 60,
+        streamerMode: room.settings.streamerMode,
     });
 
     startTimer(room, 60, () => {
@@ -1379,6 +1391,7 @@ wss.on('connection', (ws) => {
                 if (s.rounds !== undefined) room.settings.rounds = Math.min(10, Math.max(1, parseInt(s.rounds) || 3));
                 if (s.startCapital !== undefined) room.settings.startCapital = Math.min(30, Math.max(3, parseInt(s.startCapital) || 10));
                 if (s.useEvents !== undefined) room.settings.useEvents = !!s.useEvents;
+                if (s.streamerMode !== undefined) room.settings.streamerMode = !!s.streamerMode;
                 if (s.prepTime !== undefined) room.settings.prepTime = Math.min(600, Math.max(10, parseInt(s.prepTime) || 120));
                 if (s.presentTime !== undefined) room.settings.presentTime = Math.min(600, Math.max(10, parseInt(s.presentTime) || 120));
                 if (s.investTime !== undefined) room.settings.investTime = Math.min(600, Math.max(10, parseInt(s.investTime) || 60));
@@ -1529,6 +1542,18 @@ wss.on('connection', (ws) => {
                     p.cards = null;
                 });
                 broadcastToRoom(room, getLobbyState(room));
+                break;
+            }
+
+            // ==================== СТРИМЕРСКИЙ РЕЖИМ: ТЕКСТ ПРЕЗЕНТАЦИИ ====================
+            case 'updatePitchText': {
+                const info = playerRooms.get(ws);
+                if (!info) return;
+                const room = rooms.get(info.roomCode);
+                if (!room) return;
+                const player = room.players.get(info.playerId);
+                if (!player) return;
+                player.pitchText = (msg.text || '').substring(0, 7000);
                 break;
             }
 

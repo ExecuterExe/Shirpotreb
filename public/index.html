@@ -205,6 +205,16 @@
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
+                        <div class="setting-item setting-toggle">
+                            <div class="setting-label">
+                                🎬 Стримерский режим
+                                <div class="setting-hint">Текстовые презентации для тех, кто без микрофона</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="set-streamer" onchange="updateSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -288,6 +298,17 @@
                 </ul>
             </div>
 
+            <!-- СТРИМЕРСКИЙ РЕЖИМ: ТЕКСТ ПРЕЗЕНТАЦИИ -->
+            <div id="prep-pitch-section" class="glass-card pitch-section hidden">
+                <h4>🎬 Напишите текст презентации</h4>
+                <p class="pitch-hint">Для тех, кто без микрофона. Если вы с микрофоном — можете не писать, выступите
+                    голосом.</p>
+                <textarea id="prep-pitch-text" class="pitch-textarea"
+                    placeholder="Дамы и господа! Представляю вам революционный продукт..." maxlength="2000"
+                    oninput="onPitchTextChange()"></textarea>
+                <div class="pitch-counter"><span id="pitch-char-count">0</span> / 7000</div>
+            </div>
+
             <div class="prep-order-section">
                 <div class="section-title-small">📋 Порядок выступлений</div>
                 <div id="prep-order" class="presentation-order"></div>
@@ -338,6 +359,14 @@
                         <span class="pulse-dot"></span>
                         🎤 Это вы! Выступайте!
                     </div>
+                </div>
+                <!-- СТРИМЕРСКИЙ РЕЖИМ: ТЕКСТ ПРЕЗЕНТАЦИИ -->
+                <div id="pres-pitch-section" class="glass-card pitch-display hidden">
+                    <div class="pitch-display-header">
+                        <span>📝</span>
+                        <span>Текст презентации</span>
+                    </div>
+                    <div id="pres-pitch-text" class="pitch-display-text"></div>
                 </div>
 
                 <div class="cards-display">
@@ -485,6 +514,14 @@
                             <div class="card-body">
                                 <div class="card-text" id="tb-adj"></div>
                             </div>
+                        </div>
+                        <!-- СТРИМЕРСКИЙ РЕЖИМ: ТЕКСТ ПРЕЗЕНТАЦИИ -->
+                        <div id="tb-pitch-section" class="glass-card pitch-display hidden">
+                            <div class="pitch-display-header">
+                                <span>📝</span>
+                                <span>Текст презентации</span>
+                            </div>
+                            <div id="tb-pitch-text" class="pitch-display-text"></div>
                         </div>
                         <div class="game-card card-item card-mini">
                             <div class="card-badge">Предмет</div>
