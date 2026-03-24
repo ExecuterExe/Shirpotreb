@@ -1899,3 +1899,28 @@ input::placeholder {
         font-size: 1.1em;
     }
 }
+
+/* Кнопка Назад */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-dim);
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-size: 0.95em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: 'Nunito', sans-serif;
+    margin-bottom: 15px;
+}
+
+.btn-back:hover {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+    transform: translateX(-3px);
+}

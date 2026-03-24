@@ -1304,5 +1304,29 @@ function init() {
     console.log('🚀 Инновационный Ширпотреб v2.0 загружен!');
 }
 
+function leaveRoom() {
+    // Закрываем текущее соединение
+    if (ws) {
+        ws.close();
+        ws = null;
+    }
+
+    // Сбрасываем состояние
+    myPlayerId = null;
+    myRoomCode = null;
+    isHost = false;
+    currentPhase = 'welcome';
+
+    // Возвращаемся на главный экран
+    showScreen('screen-welcome');
+    showNotification('Вы вышли из комнаты', 'info');
+
+    // Переподключаемся к серверу (новый playerId)
+    setTimeout(function () {
+        connectWS();
+    }, 500);
+}
+
 // Запуск
 init();
+

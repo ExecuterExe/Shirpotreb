@@ -31,40 +31,6 @@
                 <h1 class="main-title">ИННОВАЦИОННЫЙ<br>ШИРПОТРЕБ</h1>
                 <p class="subtitle">Мир агрессивного маркетинга абсурдных продуктов</p>
                 <p class="subtitle-small">Презентуй. Инвестируй. Побеждай.</p>
-
-                <div class="glass-card welcome-form">
-                    <div class="input-group">
-                        <label for="nickname">
-                            <span class="label-icon">👤</span> Ваш никнейм
-                        </label>
-                        <input type="text" id="nickname" placeholder="Как вас называть?" maxlength="20"
-                            autocomplete="off">
-                    </div>
-
-                    <button id="btn-create" class="btn btn-primary btn-glow" onclick="createRoom()">
-                        <span class="btn-icon">🏠</span>
-                        <span class="btn-text">Создать комнату</span>
-                    </button>
-
-                    <div class="divider-line">
-                        <span>или присоединиться</span>
-                    </div>
-
-                    <div class="join-group">
-                        <input type="text" id="room-code" placeholder="КОД" maxlength="5"
-                            style="text-transform: uppercase" autocomplete="off">
-                        <button id="btn-join" class="btn btn-secondary" onclick="joinRoom()">
-                            <span class="btn-icon">🚪</span>
-                            <span class="btn-text">Войти</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div id="connection-status" class="connection-badge connecting">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Подключение...</span>
-                </div>
-
                 <div class="rules-toggle" onclick="toggleRules()">
                     <span class="rules-icon">📖</span>
                     <span>Правила игры</span>
@@ -108,12 +74,47 @@
                                 странах»</em>.</p>
                     </div>
                 </div>
+                <div class="glass-card welcome-form">
+                    <div class="input-group">
+                        <label for="nickname">
+                            <span class="label-icon">👤</span> Ваш никнейм
+                        </label>
+                        <input type="text" id="nickname" placeholder="Как вас называть?" maxlength="20"
+                            autocomplete="off">
+                    </div>
+
+                    <button id="btn-create" class="btn btn-primary btn-glow" onclick="createRoom()">
+                        <span class="btn-icon">🏠</span>
+                        <span class="btn-text">Создать комнату</span>
+                    </button>
+
+                    <div class="divider-line">
+                        <span>или присоединиться</span>
+                    </div>
+
+                    <div class="join-group">
+                        <input type="text" id="room-code" placeholder="КОД" maxlength="5"
+                            style="text-transform: uppercase" autocomplete="off">
+                        <button id="btn-join" class="btn btn-secondary" onclick="joinRoom()">
+                            <span class="btn-icon">🚪</span>
+                            <span class="btn-text">Войти</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="connection-status" class="connection-badge connecting">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Подключение...</span>
+                </div>
             </div>
         </div>
 
         <!-- ═══════════════════════ ЛОББИ ═══════════════════════ -->
         <div id="screen-lobby" class="screen">
             <div class="lobby-container">
+                <button class="btn-back" onclick="leaveRoom()">
+                    ← Назад
+                </button>
                 <div class="room-header">
                     <h2 class="section-title">🏠 Комната ожидания</h2>
                     <div class="room-code-box glass-card">
