@@ -1788,6 +1788,55 @@ input::placeholder {
     font-size: 0.95em;
 }
 
+/* Футер — поддержка и контакты */
+.footer-links {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.footer-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-size: 0.9em;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s;
+    font-family: 'Nunito', sans-serif;
+}
+
+.donate-btn {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.15), rgba(255, 217, 61, 0.15));
+    border: 1px solid rgba(255, 217, 61, 0.3);
+    color: var(--accent-gold);
+}
+
+.donate-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.3), rgba(255, 217, 61, 0.3));
+    border-color: var(--accent-gold);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px var(--accent-gold-glow);
+}
+
+.feedback-btn {
+    background: rgba(78, 205, 196, 0.1);
+    border: 1px solid rgba(78, 205, 196, 0.25);
+    color: var(--accent-primary);
+}
+
+.feedback-btn:hover {
+    background: rgba(78, 205, 196, 0.2);
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px var(--accent-primary-glow);
+}
+
 /* ═══════ RESPONSIVE ═══════ */
 @media (max-width: 650px) {
     .main-title {
